@@ -76,12 +76,23 @@ you should be able achieve both, but unfortunately, you can't always do so.
 text = '''
 ## Syscalls 
 
-The syscall interface should be unix-like without necessarily adhering to
-all unix standards.. We shall support at least the 31 most common system calls
-includeing open, pipe, pipe2, lseek, read, write, brk, execv, and so on.
+Syscalls are a concept from unix and are a method for arbitrary executables to
+request resources from the system. They are the mechanism by which programs
+enter the kernel to perform tasks such as allocating memory, creating a 
+process, or creating a scheme/file handler.
 
-Compared to Linux, our syscall interface should much more minimal. This is not
-because of the stage in development, but because of a minimalist design.
+Redox shall support a syscall interface for userspace programs to perform these
+necessary tasks. The syscall interface should be unix-like without necessarily
+adhering to all unix standards.. We shall support at least the 31 most common
+system calls includeing open, pipe, pipe2, lseek, read, write, brk, execv, and
+so on.
+
+Compared to Linux, redox's syscall interface should much more minimal. This is
+not because of the stage in development, but because of a minimalist design.
+
+In addition, redox shall allow userspace programs to handle most device drivers
+through the syscall interface, defined at [[REQ-1-syscalls]]
+
 '''
 
 [REQ-1-schemes]

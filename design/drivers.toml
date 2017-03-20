@@ -1,0 +1,124 @@
+
+[SPC-drivers]
+partof = "REQ-1-syscalls"
+text = '''
+This specification defines the API for how hardware driver's can be implemented
+in user space by using only syscalls (drivers do not need to be implemented
+in kernel space).
+
+The typical process for implementing a device driver is:
+- [[SPC-drivers-mem]]: Reserve the physical memory of the hardware device with
+  the `physalloc` syscall.
+- [[SPC-drivers-irq]]: Open the interrupt handler via the irq scheme with by
+   calling the syscal `open("irq:#")` where `#` is the interrupt to be
+   queried/handled.
+'''
+
+[SPC-drivers-mem]
+text = '''
+In order to develop device drivers a process must be able to read and write to
+physical memory. The syscalls for dealing with physical memory in userspace
+are:
+- `physalloc`: Allocate pages linearly in physical memory
+- `physfree`: Free physically allocated pages 
+- `physmap`: Map physical memory to virtual memory
+- `physunmap`: Unmap previously mapped physical memory
+- `virttophys`: Convert a virtual address to a physical one
+
+> Interrupt handling is defined in [[SPC-drivers-irq]].
+
+## Types of Memory
+Before understanding physical memory, it is important to understand the
+basic types of memory that the kernel manages:
+- user virtual addresses: "regular memory addresses" as seen by userspace
+  programs. Virtual memory gives tons of benefits for most programs, such as
+  protection from fragmentation and the ability to allocate more memory than
+  what exists (using drive swapping, etc).
+- physical addresses: the actual physical addresses used between the processor
+  and the system's hardware memory manager.
+- bus addresses: addresses used between the peripheral buses and memory. These
+  are *often* the same as the physical addresses, but are architecture
+  dependent.
+- VERIFY: **kernel logical+virtual** addresses do not exist in redox
+
+## Basics of Driver Development
+The way that most (all?) device drivers communicate with drivers is by
+using a specific physical address range of memory and triggering interrupts. 
+
+We will use the basic implementation of the ethernet (e100d) driver as an 
+example of how a driver might be implemented: **TODO** this would help improve
+understanding significantly.
+'''
+
+[SPC-drivers-irq]
+text = '''
+## IRQs and Drivers
+Userspace programs can handle interrupt requests using the `irq` scheme. The
+syscall `open("irq:#")` opens interrupt scheme number "#", which allows the
+userspace program to clear interrupts using only a file handler.
+
+Under the hood, the kernel does roughly the following: when an interrupt is
+triggered, the kernel schedules any processes waiting on that file-descriptor.
+Each driver can then either ignore the interrupt if it is not from their device
+or handle the interrupt (see [[SPC-drivers-mem]] for those details).
+
+An interrupt is marked as handled by reading the COUNT with a call to
+`read(8)`, which is a u64 representing the number of times the interrupt has
+been triggered since the kernel has been booted. Once handled, the driver
+simply echo's the COUNT it read back to the IRQ scheme using `write`.
+
+> Note: it is done this way in case another driver somehow managed to increment
+> the count in a different process (**VERIFY**: how is this even possible?
+> Shouldn't one interrupt handler be running at once, or can they actually run
+> on different processors???)
+
+If multiple IRQs happen at once, the COUNT will simply be incremented by 1 as
+each IRQ is handled.
+
+#### Example IRQ Handling
+Several drivers using one IRQ: ethernet (e100d), USB (xhcid), and AHCI (ahcid)
+
+```
+|  # | Details                           | Driver | Read | Write | IRQ Mask | IRQs High |
+|--- | ---                               | ---    | ---  | ---   | ---      | ---       |
+|  1 | CPU waits for IRQ                 |        | 0    |       | Enabled  | 0         |
+|  2 | XHCI sets IRQ line                |        | 0    |       | Enabled  | 1         |
+|  3 | CPU is interrupted, IRQ is masked |        | 1    |       | Disabled | 1         |
+|  4 | AHCI driver ignores IRQ           | ahcid  | 1    | -     | Disabled | 1         |
+|  5 | E1000 driver ignores IRQ          | e1000d | 1    | -     | Disabled | 1         |
+|  6 | XHCI driver acknowledges IRQ      | xhcid  | 1    | 1     | Enabled  | 0         |
+|  7 | CPU waits for IRQ                 |        | 1    |       | Enabled  | 0         |
+|  8 | E1000 sets IRQ line               |        | 1    |       | Enabled  | 1         |
+|  9 | CPU is interrupted, IRQ is masked |        | 2    |       | Disabled | 1         |
+| 10 | AHCI driver ignores IRQ           | ahcid  | 2    | -     | Disabled | 1         |
+| 11 | E1000 driver acknowledges IRQ     | e1000d | 2    | 2     | Enabled  | 0         |
+| 12 | XHCI driver ignores IRQ           | xhcid  | 2    | -     | Enabled  | 0         |
+| 13 | CPU waits for IRQ                 |        | 2    |       | Enabled  | 0         |
+| 14 | AHCI and XHCI set IRQ line        |        | 2    |       | Enabled  | 2         |
+| 15 | CPU is interrupted, IRQ is masked |        | 3    |       | Disabled | 2         |
+| 16 | AHCI driver acknowledges IRQ      | ahcid  | 3    | 3     | Enabled  | 1         |
+| 17 | CPU is interrupted, IRQ is masked |        | 4    |       | Disabled | 1         |
+| 18 | E1000 driver ignores IRQ          | e100d  | 4    | -     | Disabled | 1         |
+| 19 | XHCI driver acknowledges IRQ      | xhcid  | 4    | 4     | Enabled  | 0         |
+| 20 | AHCI driver ignores IRQ           | ahcid  | 4    | -     | Enabled  | 0         |
+| 21 | CPU waits for IRQ                 |        | 4    |       | Enabled  | 0         |
+```
+
+Some notes:
+- `#3`: (**VERIFY**) incrementing the COUNT and writing to the irq scheme's fd
+  are the only things that the kernel's interrupt handler has to do
+- `#6`: the IRQ is only cleared when the correct value is written back
+- `#14`: interesting because two devices set the IRQ
+    - `#16`: the IRQ is acknowldeged, which briefely Enables the IRQ mask
+    - `#17` the CPU sets it high immediately because there is still an IRQ
+      waiting.
+    - `#19`: the IRQ is acknowledged again, which finally Enables the IRQ mask
+      "permanantly" (until the next IRQ)
+    - Note that there is no way to know the order in which drivers would handle
+      the IRQ in this case
+
+## Future Development
+**VERIFY**: There is the possibility of the kernel automatically masking the
+IRQ and marking it as handled if none of the drivers handle it within a certain
+span of time. This could help with reliability with rogue device drivers.
+'''

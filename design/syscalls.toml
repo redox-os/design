@@ -1,0 +1,20 @@
+[SPC-syscalls]
+partof = "REQ-1-syscalls"
+text = '''
+## Redox syscall Specificaiton
+
+TODO: these docs are hard to write because the syscall crate has almost no
+documentation. What is the `Dma` type? What do the error values mean? What
+do the data structures represent? Once that documentation is flushed out
+it will be easier to fit them into the "grand scheme of things"
+
+### API Documentation
+The API for redox's system calls will be through the [redox_syscall][1] crate,
+documented [here][2]. The library documentation the following items that will
+not be repeated in the design documents:
+- The specific system calls that are supported, located in the `call` module
+- The full list of errors that can be generated, located in the `error` module
+
+[1]: https://github.com/redox-os/syscall
+[2]: https://docs.rs/redox_syscall
+'''

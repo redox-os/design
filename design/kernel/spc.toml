@@ -18,4 +18,15 @@ the hardware (that is, drivers which can and should run in user mode).
 ![micro vs macro kernels][1]
 
 [1]: https://upload.wikimedia.org/wikipedia/commons/6/67/OS-structure.svg
+
+The design of the kernel follows a few basic principles:
+- use the rust type system to create state abstractions (not custom state
+  machines)
+- avoid `unsafe` blocks, and when used should use `assert!` for any
+  assumptions in unsafe blocks. Prefer kernel panics over security
+  vulnerabilities. 
+- in general, use lots of `debug_assert!` statements for any assumptions
+  that are being made.
 '''
+
+
