@@ -1,58 +1,89 @@
 [SPC-schemes]
 partof = "REQ-1-schemes"
 text = '''
-Schemes shall be the natural counter-part to URLs (see: SPC-url). URLs are
-opened to schemes, which can then be opened to yield a resource.
+Schemes are the primary communication mechanism between system programs
+in redox. It facilitates communication between:
+- the kernel and drivers, such as the `irq` scheme
+- drivers and low level interfaces, such as `ethernetd` using the `network`
+  scheme (which is created directly from the driver)
+- VERIFY: low level interfaces and higher level interfaces layers, such as the
+  `ipd` scheme building on the `ethernet` scheme, and `tcp` scheme building on
+  the `ipd` scheme.
+- VERIFY: userspace programs and system level interfaces, such as the orbital
+  window manager's scheme.
 
-Schemes should be named such that the kernel is able to uniquely identify them.
-This name shall be used in the scheme part of the URL.
+In order to add a scheme to redox, a developer can either:
+1. open the scheme from the root scheme and then treat it as a 
+  `std::fs::File` (**VERIFY** `File` implements `Scheme`)
+```
+let fd = syscall::open(
+    ":network", 
+    syscall::O_RDWR | syscall::O_CREAT | syscall::O_NONBLOCK)
+    .expect( "e1000d: failed to create network scheme")
+let socket = unsafe { File::from_raw_fd(socket_fd) };
+```
+2. implement the `redox_syscall::Scheme` trait from [redox_syscall][1]
+   on a custom struct. 
 
-Schemes will be a generalization of file systems. It should be noted that schemes
-do not necessarily represent normal files; they are often a "virtual file"
-(i.e., an abstract unit with certain operations defined on it).
+Option #2 has the benefit that it gives you complete control over how
+the scheme handles every request. It can operate like a file, socket or
+something else entirely. It can handle creating or deleting files, directories,
+etc. It does not have to follow "normal" file system rules.
 
-Throughout the whole ecosystem of Redox schemes should be used as the main
-communication primitive because they are a powerful abstraction. With schemes
-Redox can have one unified I/O interface.
+For instance, the window manager orbital uses a scheme in order to render the
+GUI. TODO: explain at a high level how orbital works and why you couldn't do
+the same thing using unix files/sockets.
 
-Schemes can be defined both in user space and in kernel space but when possible
-user space is preferred. 
+[1]: https://github.com/redox-os/syscall
 '''
 
-[SPC-url]
-partof = "REQ-1-schemes"
+[SPC-schemes-kernel]
 text = '''
-## URL Representation
+Most schemes should be in user space, however a few are impelmented in kernel
+space. (TODO: there is going to be a manpage for these):
+- env: TODO no idea, something to query paths?
+- event: TODO probably handline events of some kind. How? What do the paths
+  represent. No `write` method provided so only for reading events. Looks
+  like it might be for reading kernel events?
+- initfs: VERIFY the initial ramfs for the init system to use
+- `irq:#`: open a socket to handle the #'th IRQ, more information in
+  [[SPC-drivers-irq]]
+- live: TODO: no idea, something with disks
+- memory: returns fstatvfs, which is information on the available memory
+  in the system.
+- null: same as /dev/null in unix, works as a sink for any data
+- pipe: open a unix style pipe with input+output. TODO: API is not apparent
+- root: VERIFY the root scheme `:` also called the registrar. This is interface
+  for registering new schemes and **VERIFY: also hosts the file system**
+- sys: scheme for getting information on the system such as cpu, memory, exe 
+  and context (TODO: what are those last ones?)
+- user: VERIFY: create, modify and list users
+- zero: same as /dev/zero in unix, works as a source for a u8 stream of zeroes
 
-Since it is impossible to go from user space to ring 0 in a typed manner we
-have to use some weakly typed representation (that is, we can't use an enum,
-unless we want to do transmutations and friends). Therefore we use a
-string-like representation when moving to kernel space. This is basically just
-a raw pointer to a C-like, null-terminating string. To avoid further overhead,
-we shall use more efficient representations: 
-
-### Url<'a>
-The first of the three representations is the simplest one. It consists of a
-struct containing two fat pointers, representing the scheme and the reference
-respectively. 
-
-### OwnedUrl
-This is a struct containing two Strings (that is, growable, heap-allocated
-UTF-8 string), being the scheme and the reference respectively. 
-
-### CowUrl<'a>
-This is a Copy-on-Write (CoW) URL, which, when mutated, gets cloned to heap.
-This way, you get efficient conditional allocation of the URL.
-
-Not much fanciness here.
-
-## Opening a URL
-Opening URLs happens through the OPEN system call. OPEN takes a C-like,
-null-terminating string, and two pointer-sized integers, keeping the open flags
-and the file mode, respectively.
-
-The path argument of OPEN do not have to be an URL. For compatibility reasons,
-it will default to the file: scheme. If otherwise specified, the scheme will be
-resolved by the registrar (see The root scheme), and then opened.
+Example Userspace Schemes:
+- redoxfs: the scheme that supports the redox filesystem
+- orbital: the Desktop is rendered using only a scheme
+- ethernet -> ipd -> udp + tcp: these schemes build on eachother and
+  are ALL in userspace. In fact, the entire networking stack (including the
+  driver) is located in userspace.
+- TODO: more examples here would be good
 '''
 
+[SPC-schemes-url]
+text = ''' 
+Url's shall be the data structure which can be opened to schemes in the kernel.
+From the user perspective they are a C-like null-terminating string of the form
+`"scheme:path/to/reference"`. Under the hood they are represented as one of the
+following:
+- `Url<'a>`: The simplest one, just a struct containing two fat pointers,
+  representing the scheme and the reference respectively. Similar to
+  `std::Path::Path`
+- `OwnedUrl`: This is a struct containing two Strings (that is, growable,
+  heap-allocated UTF-8 string), being the scheme and the reference
+  respectively. Similar to `std::path::PathBuf`.
+- `CowUrl<'a>`: This is a Copy-on-Write (CoW) URL, which, when mutated, gets
+  cloned to heap in order to have efficient conditional allocation of the URL.
+
+These will give the greatest flexibility and performance when dealing with Url's
+in kernel space.
+'''

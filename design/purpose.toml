@@ -97,18 +97,18 @@ through the syscall interface, defined at [[REQ-1-syscalls]]
 
 [REQ-1-schemes]
 text = '''
-## Scheme / url
-A sheme shall be an object used to specify resource descriptors which define 
-their own domain (read/write/seek) space. Schemes shall be a generalization of
-files which enable for generalization in a less "patchworky" way than
-posix.
+Schemes are the main communication primitive of redox, providing a unified
+I/O interface to a file-like addressing method called "URLs", which are
+just strings of the form "scheme:path/to/object". Each scheme must have a
+unique name. Most schemes will be defined in user space, with a few necessary
+ones defined in user space.
 
-You can think of schemes as a kind of segregated virtual file system, which can
-be arbitrarily structured (they do not have to be tree-like) and arbitrarily
-defined by a program. 
+Each scheme shall be managed by a single manager which defines it's own
+domain (read/write/seek/etc). Schemes are simply a generalization of a
+file system which creates segregated virtual file systems for each
+scheme that can be arbitrarily structured (they do not have to be tree-like)
+and arbitrarily defined by a program.
 
-Schemes will also be called "urls" in outside documents and the terms will
-be equivalent.
 '''
 
 [REQ-1-kernel]
