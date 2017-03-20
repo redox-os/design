@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html><head><link rel="stylesheet" type="text/css" href="css/index.css" /><meta charset="UTF-8"><title>Main</title><style>html,head,body { padding:0; margin:0; }
+<html><head><link rel="stylesheet" type="text/css" href="css/index.css" /><meta charset="UTF-8"><title>Design Documents</title><style>html,head,body { padding:0; margin:0; }
 body { font-family: calibri, helvetica, arial, sans-serif; }</style><script type="text/javascript">
 (function() {
 'use strict';
@@ -10348,7 +10348,12 @@ var _user$project$Artifacts_Models$getEdited = function (artifact) {
 	}
 };
 var _user$project$Artifacts_Models$initialArtifacts = _elm_lang$core$Dict$empty;
-var _user$project$Artifacts_Models$artifactValidPat = _elm_lang$core$Regex$regex('^(REQ|SPC|RSK|TST)(-[A-Z0-9_-]*[A-Z0-9_])?$');
+var _user$project$Artifacts_Models$artifactValidRaw = '(REQ|SPC|RSK|TST)(-[A-Z0-9_-]*[A-Z0-9_])?';
+var _user$project$Artifacts_Models$artifactValidPat = _elm_lang$core$Regex$regex(
+	A2(
+		_elm_lang$core$Basics_ops['++'],
+		'^',
+		A2(_elm_lang$core$Basics_ops['++'], _user$project$Artifacts_Models$artifactValidRaw, '$')));
 var _user$project$Artifacts_Models$spacePat = _elm_lang$core$Regex$regex(' ');
 var _user$project$Artifacts_Models$indexNameUnchecked = function (name) {
 	var replaced = A4(
@@ -10376,9 +10381,9 @@ var _user$project$Artifacts_Models$initName = function (name) {
 		return _elm_lang$core$Result$Err(_p2._0);
 	}
 };
-var _user$project$Artifacts_Models$Loc = F3(
-	function (a, b, c) {
-		return {path: a, row: b, col: c};
+var _user$project$Artifacts_Models$Loc = F2(
+	function (a, b) {
+		return {path: a, line: b};
 	});
 var _user$project$Artifacts_Models$Name = F2(
 	function (a, b) {
@@ -10394,7 +10399,9 @@ var _user$project$Artifacts_Models$Artifact = function (a) {
 							return function (h) {
 								return function (i) {
 									return function (j) {
-										return {id: a, name: b, path: c, text: d, partof: e, parts: f, loc: g, completed: h, tested: i, edited: j};
+										return function (k) {
+											return {id: a, name: b, path: c, text: d, partof: e, parts: f, code: g, done: h, completed: i, tested: j, edited: k};
+										};
 									};
 								};
 							};
@@ -10501,9 +10508,9 @@ var _user$project$Models$initialErrors = {
 	descs: {ctor: '[]'}
 };
 var _user$project$Models$initialSettings = {readonly: true};
-var _user$project$Models$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {artifacts: a, route: b, errors: c, settings: d, addr: e, state: f};
+var _user$project$Models$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {artifacts: a, route: b, location: c, errors: d, settings: e, addr: f, state: g};
 	});
 var _user$project$Models$Settings = function (a) {
 	return {readonly: a};
@@ -10517,17 +10524,13 @@ var _user$project$Models$State = F3(
 	});
 var _user$project$Artifacts_Commands$locDecoder = A3(
 	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-	'col',
+	'line',
 	_elm_lang$core$Json_Decode$int,
 	A3(
 		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-		'row',
-		_elm_lang$core$Json_Decode$int,
-		A3(
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-			'path',
-			_elm_lang$core$Json_Decode$string,
-			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$Artifacts_Models$Loc))));
+		'path',
+		_elm_lang$core$Json_Decode$string,
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$Artifacts_Models$Loc)));
 var _user$project$Artifacts_Commands$nameDecoderValue = function (name) {
 	var _p0 = _user$project$Artifacts_Models$initName(name);
 	if (_p0.ctor === 'Ok') {
@@ -10557,33 +10560,37 @@ var _user$project$Artifacts_Commands$artifactDecoder = A2(
 			_elm_lang$core$Json_Decode$float,
 			A3(
 				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-				'loc',
-				_elm_lang$core$Json_Decode$nullable(_user$project$Artifacts_Commands$locDecoder),
+				'done',
+				_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string),
 				A3(
 					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-					'parts',
-					_elm_lang$core$Json_Decode$list(_user$project$Artifacts_Commands$nameDecoder),
+					'code',
+					_elm_lang$core$Json_Decode$nullable(_user$project$Artifacts_Commands$locDecoder),
 					A3(
 						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-						'partof',
+						'parts',
 						_elm_lang$core$Json_Decode$list(_user$project$Artifacts_Commands$nameDecoder),
 						A3(
 							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-							'text',
-							_elm_lang$core$Json_Decode$string,
+							'partof',
+							_elm_lang$core$Json_Decode$list(_user$project$Artifacts_Commands$nameDecoder),
 							A3(
 								_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-								'path',
+								'text',
 								_elm_lang$core$Json_Decode$string,
 								A3(
 									_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-									'name',
-									_user$project$Artifacts_Commands$nameDecoder,
+									'path',
+									_elm_lang$core$Json_Decode$string,
 									A3(
 										_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
-										'id',
-										_elm_lang$core$Json_Decode$int,
-										_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$Artifacts_Models$Artifact)))))))))));
+										'name',
+										_user$project$Artifacts_Commands$nameDecoder,
+										A3(
+											_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+											'id',
+											_elm_lang$core$Json_Decode$int,
+											_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$Artifacts_Models$Artifact))))))))))));
 var _user$project$Artifacts_Commands$artifactsDecoder = _elm_lang$core$Json_Decode$list(_user$project$Artifacts_Commands$artifactDecoder);
 var _user$project$Artifacts_Commands$errorDecoder = A3(
 	_elm_lang$core$Json_Decode$map2,
@@ -10814,6 +10821,41 @@ var _user$project$Artifacts_Commands$isErr = function (x) {
 var _user$project$Artifacts_Commands$isOk = function (x) {
 	return !_user$project$Artifacts_Commands$isErr(x);
 };
+var _user$project$Routing$matchers = _evancz$url_parser$UrlParser$oneOf(
+	{
+		ctor: '::',
+		_0: A2(_evancz$url_parser$UrlParser$map, _user$project$Messages$ArtifactsRoute, _evancz$url_parser$UrlParser$top),
+		_1: {
+			ctor: '::',
+			_0: A2(
+				_evancz$url_parser$UrlParser$map,
+				_user$project$Messages$ArtifactNameRoute,
+				A2(
+					_evancz$url_parser$UrlParser_ops['</>'],
+					_evancz$url_parser$UrlParser$s('artifacts'),
+					_evancz$url_parser$UrlParser$string)),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_evancz$url_parser$UrlParser$map,
+					_user$project$Messages$ArtifactsRoute,
+					_evancz$url_parser$UrlParser$s('artifacts')),
+				_1: {ctor: '[]'}
+			}
+		}
+	});
+var _user$project$Routing$router = function (location) {
+	var _p0 = A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Routing$matchers, location);
+	if (_p0.ctor === 'Just') {
+		return _p0._0;
+	} else {
+		return _user$project$Messages$NotFoundRoute;
+	}
+};
+var _user$project$Routing$routerMsg = function (location) {
+	return _user$project$Messages$RouteChange(
+		_user$project$Routing$router(location));
+};
 var _user$project$Artifacts_View$completedScore = function (artifact) {
 	return (_elm_lang$core$Native_Utils.cmp(artifact.completed, 1.0) > -1) ? 3 : ((_elm_lang$core$Native_Utils.cmp(artifact.completed, 0.7) > -1) ? 2 : ((_elm_lang$core$Native_Utils.cmp(artifact.completed, 0.4) > -1) ? 1 : 0));
 };
@@ -10827,7 +10869,7 @@ var _user$project$Artifacts_View$artifactColor = function (artifact) {
 var _user$project$Artifacts_View$seeArtifact = F2(
 	function (model, artifact) {
 		return A2(
-			_elm_lang$html$Html$button,
+			_elm_lang$html$Html$a,
 			{
 				ctor: '::',
 				_0: _elm_lang$html$Html_Attributes$class(
@@ -10872,7 +10914,7 @@ var _user$project$Artifacts_View$seeArtifactName = F2(
 			}
 		}();
 		return A2(_elm_lang$core$Dict$member, indexName, model.artifacts) ? A2(
-			_elm_lang$html$Html$span,
+			_elm_lang$html$Html$a,
 			{
 				ctor: '::',
 				_0: _elm_lang$html$Html_Attributes$class(
@@ -10897,7 +10939,8 @@ var _user$project$Artifacts_View$seeArtifactName = F2(
 			_elm_lang$html$Html$span,
 			{
 				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$title('Name not found'),
+				_0: _elm_lang$html$Html_Attributes$class(
+					A2(_elm_lang$core$Basics_ops['++'], 'btn ', color)),
 				_1: {ctor: '[]'}
 			},
 			{
@@ -10985,39 +11028,52 @@ var _user$project$Artifacts_View$parts = F2(
 	});
 var _user$project$Artifacts_View$implementedBasic = F2(
 	function (model, artifact) {
-		var _p1 = artifact.loc;
-		if (_p1.ctor === 'Just') {
-			var _p2 = _p1._0;
-			return _elm_lang$html$Html$text(
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_p2.path,
+		var _p1 = {ctor: '_Tuple2', _0: artifact.code, _1: artifact.done};
+		if (_p1._0.ctor === 'Nothing') {
+			if (_p1._1.ctor === 'Just') {
+				return _elm_lang$html$Html$text(_p1._1._0);
+			} else {
+				return A2(
+					_elm_lang$html$Html$span,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('italic gray'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('not directly implemented'),
+						_1: {ctor: '[]'}
+					});
+			}
+		} else {
+			if (_p1._1.ctor === 'Nothing') {
+				var _p2 = _p1._0._0;
+				return _elm_lang$html$Html$text(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						' (',
+						_p2.path,
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(_p2.row),
+							'[',
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								',',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(_p2.col),
-									')'))))));
-		} else {
-			return A2(
-				_elm_lang$html$Html$span,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('italic gray'),
-					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html$text('not directly implemented'),
-					_1: {ctor: '[]'}
-				});
+								_elm_lang$core$Basics$toString(_p2.line),
+								']'))));
+			} else {
+				return A2(
+					_elm_lang$html$Html$span,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('bold red'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('ERROR: code+done both set'),
+						_1: {ctor: '[]'}
+					});
+			}
 		}
 	});
 var _user$project$Artifacts_View$implemented = F2(
@@ -11026,30 +11082,80 @@ var _user$project$Artifacts_View$implemented = F2(
 			_elm_lang$html$Html$div,
 			{ctor: '[]'},
 			function () {
-				var _p3 = artifact.loc;
-				if (_p3.ctor === 'Just') {
-					return {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$span,
-							{
+				var _p3 = {ctor: '_Tuple2', _0: artifact.code, _1: artifact.done};
+				if (_p3._0.ctor === 'Nothing') {
+					if (_p3._1.ctor === 'Just') {
+						return {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$span,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('bold'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('Defined as done: '),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('bold'),
+								_0: A2(_user$project$Artifacts_View$implementedBasic, model, artifact),
 								_1: {ctor: '[]'}
-							},
-							{
+							}
+						};
+					} else {
+						return {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$span,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('bold'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('Implementation: '),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html$text('Implemented at: '),
+								_0: A2(_user$project$Artifacts_View$implementedBasic, model, artifact),
 								_1: {ctor: '[]'}
-							}),
-						_1: {
+							}
+						};
+					}
+				} else {
+					if (_p3._1.ctor === 'Nothing') {
+						return {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$span,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('bold'),
+									_1: {ctor: '[]'}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text('Implemented at: '),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(_user$project$Artifacts_View$implementedBasic, model, artifact),
+								_1: {ctor: '[]'}
+							}
+						};
+					} else {
+						return {
 							ctor: '::',
 							_0: A2(_user$project$Artifacts_View$implementedBasic, model, artifact),
 							_1: {ctor: '[]'}
-						}
-					};
-				} else {
-					return {ctor: '[]'};
+						};
+					}
 				}
 			}());
 	});
@@ -11197,6 +11303,21 @@ var _user$project$Artifacts_View$completion = function (artifact) {
 			}
 		});
 };
+var _user$project$Artifacts_Edit$fullArtifactUrl = F2(
+	function (model, indexName) {
+		var addrName = _elm_lang$core$String$toLower(
+			_user$project$Artifacts_Models$indexNameUnchecked(indexName));
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			model.location.origin,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'/',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Artifacts_Models$artifactsUrl,
+					A2(_elm_lang$core$Basics_ops['++'], '/', addrName))));
+	});
 var _user$project$Artifacts_Edit$listBtn = A2(
 	_elm_lang$html$Html$button,
 	{
@@ -11271,13 +11392,6 @@ var _user$project$Artifacts_Edit$displayRawText = F2(
 				_1: {ctor: '[]'}
 			});
 	});
-var _user$project$Artifacts_Edit$displayText = F2(
-	function (model, artifact) {
-		return model.state.edit.rendered ? A2(
-			_evancz$elm_markdown$Markdown$toHtml,
-			{ctor: '[]'},
-			artifact.text) : A2(_user$project$Artifacts_Edit$displayRawText, model, artifact);
-	});
 var _user$project$Artifacts_Edit$selectRenderedBtns = function (model) {
 	var edit = model.state.edit;
 	var _p0 = edit.rendered ? {ctor: '_Tuple2', _0: 'black', _1: 'gray'} : {ctor: '_Tuple2', _0: 'gray', _1: 'black'};
@@ -11334,36 +11448,6 @@ var _user$project$Artifacts_Edit$selectRenderedBtns = function (model) {
 			}
 		});
 };
-var _user$project$Artifacts_Edit$formColumnTwo = F2(
-	function (model, artifact) {
-		return A2(
-			_elm_lang$html$Html$div,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('col col-6'),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$h3,
-					{ctor: '[]'},
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html$text('Text'),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: _user$project$Artifacts_Edit$selectRenderedBtns(model),
-					_1: {
-						ctor: '::',
-						_0: A2(_user$project$Artifacts_Edit$displayText, model, artifact),
-						_1: {ctor: '[]'}
-					}
-				}
-			});
-	});
 var _user$project$Artifacts_Edit$formColumnOne = F2(
 	function (model, artifact) {
 		return A2(
@@ -11450,6 +11534,93 @@ var _user$project$Artifacts_Edit$formColumnOne = F2(
 				}
 			});
 	});
+var _user$project$Artifacts_Edit$nav = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('clearfix mb2 white bg-black p1'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: _user$project$Artifacts_Edit$listBtn,
+			_1: {ctor: '[]'}
+		});
+};
+var _user$project$Artifacts_Edit$artifactLinkRegex = _elm_lang$core$Regex$caseInsensitive(
+	_elm_lang$core$Regex$regex(
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'\\[\\[(',
+			A2(_elm_lang$core$Basics_ops['++'], _user$project$Artifacts_Models$artifactValidRaw, ')\\]\\]'))));
+var _user$project$Artifacts_Edit$replaceArtifactLinks = F2(
+	function (model, text) {
+		var replace = function (match) {
+			var _p1 = _elm_lang$core$List$head(match.submatches);
+			if (_p1.ctor === 'Just') {
+				var _p2 = _p1._0;
+				if (_p2.ctor === 'Just') {
+					var _p3 = _p2._0;
+					return A2(
+						_elm_lang$core$Basics_ops['++'],
+						'[',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_p3,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'](',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									A2(_user$project$Artifacts_Edit$fullArtifactUrl, model, _p3),
+									')'))));
+				} else {
+					return 'INTERNAL_ERROR';
+				}
+			} else {
+				return 'INTERNAL_ERROR';
+			}
+		};
+		return A4(_elm_lang$core$Regex$replace, _elm_lang$core$Regex$All, _user$project$Artifacts_Edit$artifactLinkRegex, replace, text);
+	});
+var _user$project$Artifacts_Edit$displayText = F2(
+	function (model, artifact) {
+		return model.state.edit.rendered ? A2(
+			_evancz$elm_markdown$Markdown$toHtml,
+			{ctor: '[]'},
+			A2(_user$project$Artifacts_Edit$replaceArtifactLinks, model, artifact.text)) : A2(_user$project$Artifacts_Edit$displayRawText, model, artifact);
+	});
+var _user$project$Artifacts_Edit$formColumnTwo = F2(
+	function (model, artifact) {
+		return A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('col col-6'),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$h3,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('Text'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: _user$project$Artifacts_Edit$selectRenderedBtns(model),
+					_1: {
+						ctor: '::',
+						_0: A2(_user$project$Artifacts_Edit$displayText, model, artifact),
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
 var _user$project$Artifacts_Edit$form = F2(
 	function (model, artifact) {
 		return A2(
@@ -11495,20 +11666,6 @@ var _user$project$Artifacts_Edit$form = F2(
 				}
 			});
 	});
-var _user$project$Artifacts_Edit$nav = function (model) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('clearfix mb2 white bg-black p1'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: _user$project$Artifacts_Edit$listBtn,
-			_1: {ctor: '[]'}
-		});
-};
 var _user$project$Artifacts_Edit$view = F2(
 	function (model, artifact) {
 		return A2(
@@ -11964,7 +12121,7 @@ var _user$project$Artifacts_List$list = function (model) {
 								},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text('Def-at'),
+									_0: _elm_lang$html$Html$text('Def-At'),
 									_1: {ctor: '[]'}
 								}),
 							_1: {ctor: '[]'}
@@ -11981,14 +12138,14 @@ var _user$project$Artifacts_List$list = function (model) {
 										_0: _user$project$Artifacts_List$w2,
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$id('th_loc'),
+											_0: _elm_lang$html$Html_Attributes$id('th_done'),
 											_1: {ctor: '[]'}
 										}
 									}
 								},
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html$text('Impl-at'),
+									_0: _elm_lang$html$Html$text('Done'),
 									_1: {ctor: '[]'}
 								}),
 							_1: {ctor: '[]'}
@@ -12271,7 +12428,7 @@ var _user$project$Artifacts_List$select = function (model) {
 								ctor: '::',
 								_0: A3(
 									_user$project$Artifacts_List$selectColBtn,
-									'impl-at',
+									'done',
 									cols.loc,
 									function (s) {
 										return _elm_lang$core$Native_Utils.update(
@@ -12534,49 +12691,15 @@ var _user$project$Update$update = F2(
 				};
 		}
 	});
-var _user$project$Routing$matchers = _evancz$url_parser$UrlParser$oneOf(
-	{
-		ctor: '::',
-		_0: A2(_evancz$url_parser$UrlParser$map, _user$project$Messages$ArtifactsRoute, _evancz$url_parser$UrlParser$top),
-		_1: {
-			ctor: '::',
-			_0: A2(
-				_evancz$url_parser$UrlParser$map,
-				_user$project$Messages$ArtifactNameRoute,
-				A2(
-					_evancz$url_parser$UrlParser_ops['</>'],
-					_evancz$url_parser$UrlParser$s('artifacts'),
-					_evancz$url_parser$UrlParser$string)),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_evancz$url_parser$UrlParser$map,
-					_user$project$Messages$ArtifactsRoute,
-					_evancz$url_parser$UrlParser$s('artifacts')),
-				_1: {ctor: '[]'}
-			}
-		}
-	});
-var _user$project$Routing$router = function (location) {
-	var _p0 = A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Routing$matchers, location);
-	if (_p0.ctor === 'Just') {
-		return _p0._0;
-	} else {
-		return _user$project$Messages$NotFoundRoute;
-	}
-};
-var _user$project$Routing$routerMsg = function (location) {
-	return _user$project$Messages$RouteChange(
-		_user$project$Routing$router(location));
-};
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };
-var _user$project$Main$initialModel = F2(
-	function (addr, route) {
+var _user$project$Main$initialModel = F3(
+	function (location, addr, route) {
 		return {
-			artifacts: _user$project$Artifacts_Commands$artifactsFromStrUnsafe('[{"completed":0.0,"id":0,"loc":null,"name":"REQ-1-syscalls","partof":["REQ-1"],"parts":[],"path":"/home/garrett/projects/redox-design/design/purpose.toml","tested":0.0,"text":"## Syscalls \\n\\nThe syscall interface should be unix-like without necessarily adhering to\\nall unix standards.. We shall support at least the 31 most common system calls\\nincludeing open, pipe, pipe2, lseek, read, write, brk, execv, and so on.\\n\\nCompared to Linux, our syscall interface should much more minimal. This is not\\nbecause of the stage in development, but because of a minimalist design.\\n"},{"completed":0.0,"id":1,"loc":null,"name":"REQ-1-kernel","partof":["REQ-1"],"parts":["SPC-kernel"],"path":"/home/garrett/projects/redox-design/design/purpose.toml","tested":0.0,"text":"## The Kernel\\nRedox\'s kernel shall be a microkernel. The architecture is largely inspired by MINIX.\\n\\nHaving vastly smaller amounts of code in the kernel will make it easier to find and\\nfix bugs/security issues more efficiently. The main idea is to have components \\nand drivers that would be inside a monolithic kernel exist in user space and \\nfollow the Principle of Least Authority (POLA). This is where every individual \\ncomponent should be:\\n- Completely isolated in memory and as separate user processes \\n\\t- The failure of one component does not crash other components \\n\\t- Allows foreign and untrusted code to not expose the entire system \\n\\t- Bugs and malware cannot spread to other components \\n- Has restricted communication with other components \\n- Doesn\'t have Admin/Super-User privileges Bugs are moved to user space which \\n\\treduces their power\\n\\nAll of this should increase the reliability of the system significantly and make\\nredox useful. This for mission-critical applications and for users that want\\nminimal issues with their computer systems. \\n"},{"completed":0.0,"id":2,"loc":null,"name":"SPC-url","partof":["REQ-1-schemes","SPC"],"parts":[],"path":"/home/garrett/projects/redox-design/design/schemes.toml","tested":0.0,"text":"## URL Representation\\n\\nSince it is impossible to go from user space to ring 0 in a typed manner we\\nhave to use some weakly typed representation (that is, we can\'t use an enum,\\nunless we want to do transmutations and friends). Therefore we use a\\nstring-like representation when moving to kernel space. This is basically just\\na raw pointer to a C-like, null-terminating string. To avoid further overhead,\\nwe shall use more efficient representations: \\n\\n### Url<\'a>\\nThe first of the three representations is the simplest one. It consists of a\\nstruct containing two fat pointers, representing the scheme and the reference\\nrespectively. \\n\\n### OwnedUrl\\nThis is a struct containing two Strings (that is, growable, heap-allocated\\nUTF-8 string), being the scheme and the reference respectively. \\n\\n### CowUrl<\'a>\\nThis is a Copy-on-Write (CoW) URL, which, when mutated, gets cloned to heap.\\nThis way, you get efficient conditional allocation of the URL.\\n\\nNot much fanciness here.\\n\\n## Opening a URL\\nOpening URLs happens through the OPEN system call. OPEN takes a C-like,\\nnull-terminating string, and two pointer-sized integers, keeping the open flags\\nand the file mode, respectively.\\n\\nThe path argument of OPEN do not have to be an URL. For compatibility reasons,\\nit will default to the file: scheme. If otherwise specified, the scheme will be\\nresolved by the registrar (see The root scheme), and then opened.\\n"},{"completed":0.0,"id":3,"loc":null,"name":"REQ","partof":[],"parts":["REQ-0","REQ-1"],"path":"PARENT","tested":0.0,"text":"AUTO"},{"completed":0.0,"id":4,"loc":null,"name":"REQ-0-assertions","partof":["REQ-0"],"parts":[],"path":"/home/garrett/projects/redox-design/design/purpose.toml","tested":0.0,"text":"Assertions shall be used throughout these documents to mean:\\n- **shall:** the statement must be implemented and it\'s\\n    implementation verified.\\n- **will:** statement of fact, not subject to verification.\\n    i.e. \\"The X system will have timing as defined in ICD 1234\\"\\n- **should:** goals, non-mandatory provisions. Statements using \\"should\\"\\n    **should** be verified if possible, but verification is not mandatory if\\n    not possible. Is a statement of intent.\\n"},{"completed":0.0,"id":5,"loc":null,"name":"SPC-schemes","partof":["SPC","REQ-1-schemes"],"parts":[],"path":"/home/garrett/projects/redox-design/design/schemes.toml","tested":0.0,"text":"Schemes shall be the natural counter-part to URLs (see: SPC-url). URLs are\\nopened to schemes, which can then be opened to yield a resource.\\n\\nSchemes should be named such that the kernel is able to uniquely identify them.\\nThis name shall be used in the scheme part of the URL.\\n\\nSchemes will be a generalization of file systems. It should be noted that schemes\\ndo not necessarily represent normal files; they are often a \\"virtual file\\"\\n(i.e., an abstract unit with certain operations defined on it).\\n\\nThroughout the whole ecosystem of Redox schemes should be used as the main\\ncommunication primitive because they are a powerful abstraction. With schemes\\nRedox can have one unified I/O interface.\\n\\nSchemes can be defined both in user space and in kernel space but when possible\\nuser space is preferred. \\n"},{"completed":0.0,"id":6,"loc":null,"name":"REQ-1-schemes","partof":["REQ-1"],"parts":["SPC-url","SPC-schemes"],"path":"/home/garrett/projects/redox-design/design/purpose.toml","tested":0.0,"text":"## Scheme / url\\nA sheme shall be an object used to specify resource descriptors which define \\ntheir own domain (read/write/seek) space. Schemes shall be a generalization of\\nfiles which enable for generalization in a less \\"patchworky\\" way than\\nposix.\\n\\nYou can think of schemes as a kind of segregated virtual file system, which can\\nbe arbitrarily structured (they do not have to be tree-like) and arbitrarily\\ndefined by a program. \\n\\nSchemes will also be called \\"urls\\" in outside documents and the terms will\\nbe equivalent.\\n"},{"completed":0.0,"id":7,"loc":null,"name":"SPC","partof":[],"parts":["SPC-url","SPC-kernel","SPC-schemes"],"path":"PARENT","tested":0.0,"text":"AUTO"},{"completed":0.0,"id":8,"loc":null,"name":"REQ-0-prefix","partof":["REQ-0"],"parts":[],"path":"/home/garrett/projects/redox-design/design/purpose.toml","tested":0.0,"text":"In this project, the following conventions shall apply for artifact names:\\n - `ART-0-*` denotes definitions and artifact process only. These will be defined\\n     as completed, as they are simply documenting the process of artifacts.\\n - `ART-1-*` denotes purpose REQs, which detail at the highest level why\\n     this project exists\\n\\nAny artifact that is `1` will not be implemented in code (it will only be implemented\\nby sub artifacts).\\n\\nThe purpose of this prefix is to bring these artifacts to the top when they are listed,\\nas well as make a simple and clear distinction between purpose documentation and \\ndesign/user requirements.\\n"},{"completed":0.0,"id":9,"loc":null,"name":"SPC-kernel","partof":["SPC","REQ-1-kernel"],"parts":["SPC-kernel-schemes"],"path":"/home/garrett/projects/redox-design/design/kernel/spc.toml","tested":0.0,"text":"Redox\'s kernel shall be a microkernel. Microkernels stand out in their design\\nby providing minimal abstractions in kernel-space. Microkernels have an\\nemphasis on user space, unlike Monolithic kernels which have an emphasis on\\nkernel space.\\n\\nThe basic philosophy of microkernels is that any component which can run in\\nuser space should run in user space. Kernel-space should only be utilized for\\nthe most essential components (e.g., system calls, process separation, resource\\nmanagement, IPC, thread management, etc).\\n\\nThe kernel\'s main task should be to act as a medium for communication and\\nsegregation of processes. The kernel should provide minimal abstraction over\\nthe hardware (that is, drivers which can and should run in user mode).\\n\\n![micro vs macro kernels][1]\\n\\n[1]: https://upload.wikimedia.org/wikipedia/commons/6/67/OS-structure.svg\\n"},{"completed":0.0,"id":10,"loc":null,"name":"REQ-0","partof":["REQ"],"parts":["REQ-0-assertions","REQ-0-prefix"],"path":"/home/garrett/projects/redox-design/design/purpose.toml","tested":0.0,"text":"definitions and process for the redox project"},{"completed":0.0,"id":11,"loc":null,"name":"SPC-kernel-schemes","partof":["SPC-KERNEL"],"parts":[],"path":"/home/garrett/projects/redox-design/design/kernel/schemes.toml","tested":0.0,"text":"The kernel provides a small number of schemes in order to support userspace.\\nName \\tDescription \\t\\n: \\t    Root scheme - allows the creation of userspace schemes \\t\\ndebug: \\tProvides access to serial console\\nevent: \\tAllows reading of `Event`s which are registered using fevent\\nenv: \\tAccess and modify environmental variables\\ninitfs:\\tReadonly filesystem used for initializing the system\\nirq: \\tAllows userspace handling of IRQs\\nnull: \\tScheme that will discard all writes, and read no bytes\\npipe: \\tUsed internally by the kernel to implement pipe\\nsys: \\tSystem information, such as the context list and scheme list\\nzero: \\tScheme that will discard all writes, and always fill read buffers with zero\\n"},{"completed":0.0,"id":12,"loc":null,"name":"REQ-1","partof":["REQ"],"parts":["REQ-1-syscalls","REQ-1-kernel","REQ-1-schemes"],"path":"/home/garrett/projects/redox-design/design/purpose.toml","tested":0.0,"text":"# Purpose \\n\\nRedox is a general purpose operating system and surrounding ecosystem written in\\npure Rust. Our aim is to provide a fully functioning Unix-like microkernel, that\\nis both secure and free.\\n\\nRedox is an attempt to make a complete, fully-functioning, general-purpose\\noperating system with a focus on safety, freedom, reliability, correctness, and\\npragmatism.\\n\\n## The goals of Redox\\n\\nWe want to be able to use it, without obstructions, as a alternative to Linux\\non our computers. It should be able to run most Linux programs with only\\nminimal modifications. (see Why Free Software)\\n\\nWe\'re aiming towards a complete, safe Rust ecosystem. This is a design choice,\\nwhich hopefully improves correctness and security (see Why Rust).\\n\\nWe want to improve the security design when compared to other Unix-like kernels\\nby using safe defaults and disallowing insecure configurations where possible.\\n\\n## The non-goals of Redox\\n\\nWe are not a Linux clone, or POSIX-compliant, nor are we crazy scientists, who\\nwish to redesign everything. Generally, we stick to well-tested and proven\\ncorrect designs. If it ain\'t broken don\'t fix it.\\n\\nThis means that a large number of standard programs and libraries will be\\ncompatible with Redox. Some things that do not align with our design decisions\\nwill have to be ported.\\n\\nThe key here is the trade off between correctness and compatibility. Ideally,\\nyou should be able achieve both, but unfortunately, you can\'t always do so.\\n\\n### References:\\n- [why rust](https://doc.redox-os.org/book/introduction/why_rust.html)\\n"}]'),
+			artifacts: _user$project$Artifacts_Commands$artifactsFromStrUnsafe('[{"code":null,"completed":0.0,"done":null,"id":0,"name":"REQ-1","partof":["REQ"],"parts":["REQ-1-kernel","REQ-1-schemes","REQ-1-syscalls"],"path":"design/purpose.toml","tested":0.0,"text":"# Purpose \\n\\nRedox is a general purpose operating system and surrounding ecosystem written in\\npure Rust. Our aim is to provide a fully functioning Unix-like microkernel, that\\nis both secure and free.\\n\\nRedox is an attempt to make a complete, fully-functioning, general-purpose\\noperating system with a focus on safety, freedom, reliability, correctness, and\\npragmatism.\\n\\n## The goals of Redox\\n\\nWe want to be able to use it, without obstructions, as a alternative to Linux\\non our computers. It should be able to run most Linux programs with only\\nminimal modifications. (see Why Free Software)\\n\\nWe\'re aiming towards a complete, safe Rust ecosystem. This is a design choice,\\nwhich hopefully improves correctness and security (see Why Rust).\\n\\nWe want to improve the security design when compared to other Unix-like kernels\\nby using safe defaults and disallowing insecure configurations where possible.\\n\\n## The non-goals of Redox\\n\\nWe are not a Linux clone, or POSIX-compliant, nor are we crazy scientists, who\\nwish to redesign everything. Generally, we stick to well-tested and proven\\ncorrect designs. If it ain\'t broken don\'t fix it.\\n\\nThis means that a large number of standard programs and libraries will be\\ncompatible with Redox. Some things that do not align with our design decisions\\nwill have to be ported.\\n\\nThe key here is the trade off between correctness and compatibility. Ideally,\\nyou should be able achieve both, but unfortunately, you can\'t always do so.\\n\\n### References:\\n- [why rust](https://doc.redox-os.org/book/introduction/why_rust.html)\\n"},{"code":null,"completed":0.0,"done":null,"id":1,"name":"SPC-drivers-irq","partof":["SPC-DRIVERS"],"parts":[],"path":"design/drivers.toml","tested":0.0,"text":"## IRQs and Drivers\\nUserspace programs can handle interrupt requests using the `irq` scheme. The\\nsyscall `open(\\"irq:#\\")` opens interrupt scheme number \\"#\\", which allows the\\nuserspace program to clear interrupts using only a file handler.\\n\\nUnder the hood, the kernel does roughly the following: when an interrupt is\\ntriggered, the kernel schedules any processes waiting on that file-descriptor.\\nEach driver can then either ignore the interrupt if it is not from their device\\nor handle the interrupt (see [[SPC-drivers-mem]] for those details).\\n\\nAn interrupt is marked as handled by reading the COUNT with a call to\\n`read(8)`, which is a u64 representing the number of times the interrupt has\\nbeen triggered since the kernel has been booted. Once handled, the driver\\nsimply echo\'s the COUNT it read back to the IRQ scheme using `write`.\\n\\n> Note: it is done this way in case another driver somehow managed to increment\\n> the count in a different process (**VERIFY**: how is this even possible?\\n> Shouldn\'t one interrupt handler be running at once, or can they actually run\\n> on different processors???)\\n\\nIf multiple IRQs happen at once, the COUNT will simply be incremented by 1 as\\neach IRQ is handled.\\n\\n#### Example IRQ Handling\\nSeveral drivers using one IRQ: ethernet (e100d), USB (xhcid), and AHCI (ahcid)\\n\\n```\\n|  # | Details                           | Driver | Read | Write | IRQ Mask | IRQs High |\\n|--- | ---                               | ---    | ---  | ---   | ---      | ---       |\\n|  1 | CPU waits for IRQ                 |        | 0    |       | Enabled  | 0         |\\n|  2 | XHCI sets IRQ line                |        | 0    |       | Enabled  | 1         |\\n|  3 | CPU is interrupted, IRQ is masked |        | 1    |       | Disabled | 1         |\\n|  4 | AHCI driver ignores IRQ           | ahcid  | 1    | -     | Disabled | 1         |\\n|  5 | E1000 driver ignores IRQ          | e1000d | 1    | -     | Disabled | 1         |\\n|  6 | XHCI driver acknowledges IRQ      | xhcid  | 1    | 1     | Enabled  | 0         |\\n|  7 | CPU waits for IRQ                 |        | 1    |       | Enabled  | 0         |\\n|  8 | E1000 sets IRQ line               |        | 1    |       | Enabled  | 1         |\\n|  9 | CPU is interrupted, IRQ is masked |        | 2    |       | Disabled | 1         |\\n| 10 | AHCI driver ignores IRQ           | ahcid  | 2    | -     | Disabled | 1         |\\n| 11 | E1000 driver acknowledges IRQ     | e1000d | 2    | 2     | Enabled  | 0         |\\n| 12 | XHCI driver ignores IRQ           | xhcid  | 2    | -     | Enabled  | 0         |\\n| 13 | CPU waits for IRQ                 |        | 2    |       | Enabled  | 0         |\\n| 14 | AHCI and XHCI set IRQ line        |        | 2    |       | Enabled  | 2         |\\n| 15 | CPU is interrupted, IRQ is masked |        | 3    |       | Disabled | 2         |\\n| 16 | AHCI driver acknowledges IRQ      | ahcid  | 3    | 3     | Enabled  | 1         |\\n| 17 | CPU is interrupted, IRQ is masked |        | 4    |       | Disabled | 1         |\\n| 18 | E1000 driver ignores IRQ          | e100d  | 4    | -     | Disabled | 1         |\\n| 19 | XHCI driver acknowledges IRQ      | xhcid  | 4    | 4     | Enabled  | 0         |\\n| 20 | AHCI driver ignores IRQ           | ahcid  | 4    | -     | Enabled  | 0         |\\n| 21 | CPU waits for IRQ                 |        | 4    |       | Enabled  | 0         |\\n```\\n\\nSome notes:\\n- `#3`: (**VERIFY**) incrementing the COUNT and writing to the irq scheme\'s fd\\n  are the only things that the kernel\'s interrupt handler has to do\\n- `#6`: the IRQ is only cleared when the correct value is written back\\n- `#14`: interesting because two devices set the IRQ\\n    - `#16`: the IRQ is acknowldeged, which briefely Enables the IRQ mask\\n    - `#17` the CPU sets it high immediately because there is still an IRQ\\n      waiting.\\n    - `#19`: the IRQ is acknowledged again, which finally Enables the IRQ mask\\n      \\"permanantly\\" (until the next IRQ)\\n    - Note that there is no way to know the order in which drivers would handle\\n      the IRQ in this case\\n\\n## Future Development\\n**VERIFY**: There is the possibility of the kernel automatically masking the\\nIRQ and marking it as handled if none of the drivers handle it within a certain\\nspan of time. This could help with reliability with rogue device drivers.\\n"},{"code":null,"completed":0.0,"done":null,"id":2,"name":"REQ-0-assertions","partof":["REQ-0"],"parts":[],"path":"design/purpose.toml","tested":0.0,"text":"Assertions shall be used throughout these documents to mean:\\n- **shall:** the statement must be implemented and it\'s\\n    implementation verified.\\n- **will:** statement of fact, not subject to verification.\\n    i.e. \\"The X system will have timing as defined in ICD 1234\\"\\n- **should:** goals, non-mandatory provisions. Statements using \\"should\\"\\n    **should** be verified if possible, but verification is not mandatory if\\n    not possible. Is a statement of intent.\\n"},{"code":null,"completed":0.0,"done":null,"id":3,"name":"REQ-0-prefix","partof":["REQ-0"],"parts":[],"path":"design/purpose.toml","tested":0.0,"text":"In this project, the following conventions shall apply for artifact names:\\n - `ART-0-*` denotes definitions and artifact process only. These will be defined\\n     as completed, as they are simply documenting the process of artifacts.\\n - `ART-1-*` denotes purpose REQs, which detail at the highest level why\\n     this project exists\\n\\nAny artifact that is `1` will not be implemented in code (it will only be implemented\\nby sub artifacts).\\n\\nThe purpose of this prefix is to bring these artifacts to the top when they are listed,\\nas well as make a simple and clear distinction between purpose documentation and \\ndesign/user requirements.\\n"},{"code":null,"completed":0.0,"done":null,"id":4,"name":"SPC-drivers-mem","partof":["SPC-DRIVERS"],"parts":[],"path":"design/drivers.toml","tested":0.0,"text":"In order to develop device drivers a process must be able to read and write to\\nphysical memory. The syscalls for dealing with physical memory in userspace\\nare:\\n- `physalloc`: Allocate pages linearly in physical memory\\n- `physfree`: Free physically allocated pages \\n- `physmap`: Map physical memory to virtual memory\\n- `physunmap`: Unmap previously mapped physical memory\\n- `virttophys`: Convert a virtual address to a physical one\\n\\n> Interrupt handling is defined in [[SPC-drivers-irq]].\\n\\n## Types of Memory\\nBefore understanding physical memory, it is important to understand the\\nbasic types of memory that the kernel manages:\\n- user virtual addresses: \\"regular memory addresses\\" as seen by userspace\\n  programs. Virtual memory gives tons of benefits for most programs, such as\\n  protection from fragmentation and the ability to allocate more memory than\\n  what exists (using drive swapping, etc).\\n- physical addresses: the actual physical addresses used between the processor\\n  and the system\'s hardware memory manager.\\n- bus addresses: addresses used between the peripheral buses and memory. These\\n  are *often* the same as the physical addresses, but are architecture\\n  dependent.\\n- VERIFY: **kernel logical+virtual** addresses do not exist in redox\\n\\n## Basics of Driver Development\\nThe way that most (all?) device drivers communicate with drivers is by\\nusing a specific physical address range of memory and triggering interrupts. \\n\\nWe will use the basic implementation of the ethernet (e100d) driver as an \\nexample of how a driver might be implemented: **TODO** this would help improve\\nunderstanding significantly.\\n"},{"code":null,"completed":0.0,"done":null,"id":5,"name":"SPC-syscalls","partof":["REQ-1-syscalls","SPC"],"parts":[],"path":"design/syscalls.toml","tested":0.0,"text":"## Redox syscall Specificaiton\\n\\nTODO: these docs are hard to write because the syscall crate has almost no\\ndocumentation. What is the `Dma` type? What do the error values mean? What\\ndo the data structures represent? Once that documentation is flushed out\\nit will be easier to fit them into the \\"grand scheme of things\\"\\n\\n### API Documentation\\nThe API for redox\'s system calls will be through the [redox_syscall][1] crate,\\ndocumented [here][2]. The library documentation the following items that will\\nnot be repeated in the design documents:\\n- The specific system calls that are supported, located in the `call` module\\n- The full list of errors that can be generated, located in the `error` module\\n\\n[1]: https://github.com/redox-os/syscall\\n[2]: https://docs.rs/redox_syscall\\n"},{"code":null,"completed":0.0,"done":null,"id":6,"name":"REQ-0","partof":["REQ"],"parts":["REQ-0-assertions","REQ-0-prefix"],"path":"design/purpose.toml","tested":0.0,"text":"definitions and process for the redox project"},{"code":null,"completed":0.0,"done":null,"id":7,"name":"SPC-url","partof":["REQ-1-schemes","SPC"],"parts":[],"path":"design/schemes.toml","tested":0.0,"text":"## URL Representation\\n\\nSince it is impossible to go from user space to ring 0 in a typed manner we\\nhave to use some weakly typed representation (that is, we can\'t use an enum,\\nunless we want to do transmutations and friends). Therefore we use a\\nstring-like representation when moving to kernel space. This is basically just\\na raw pointer to a C-like, null-terminating string. To avoid further overhead,\\nwe shall use more efficient representations: \\n\\n### Url<\'a>\\nThe first of the three representations is the simplest one. It consists of a\\nstruct containing two fat pointers, representing the scheme and the reference\\nrespectively. \\n\\n### OwnedUrl\\nThis is a struct containing two Strings (that is, growable, heap-allocated\\nUTF-8 string), being the scheme and the reference respectively. \\n\\n### CowUrl<\'a>\\nThis is a Copy-on-Write (CoW) URL, which, when mutated, gets cloned to heap.\\nThis way, you get efficient conditional allocation of the URL.\\n\\nNot much fanciness here.\\n\\n## Opening a URL\\nOpening URLs happens through the OPEN system call. OPEN takes a C-like,\\nnull-terminating string, and two pointer-sized integers, keeping the open flags\\nand the file mode, respectively.\\n\\nThe path argument of OPEN do not have to be an URL. For compatibility reasons,\\nit will default to the file: scheme. If otherwise specified, the scheme will be\\nresolved by the registrar (see The root scheme), and then opened.\\n"},{"code":null,"completed":0.0,"done":null,"id":8,"name":"REQ-1-schemes","partof":["REQ-1"],"parts":["SPC-schemes","SPC-url"],"path":"design/purpose.toml","tested":0.0,"text":"## Scheme / url\\nA sheme shall be an object used to specify resource descriptors which define \\ntheir own domain (read/write/seek) space. Schemes shall be a generalization of\\nfiles which enable for generalization in a less \\"patchworky\\" way than\\nposix.\\n\\nYou can think of schemes as a kind of segregated virtual file system, which can\\nbe arbitrarily structured (they do not have to be tree-like) and arbitrarily\\ndefined by a program. \\n\\nSchemes will also be called \\"urls\\" in outside documents and the terms will\\nbe equivalent.\\n"},{"code":null,"completed":0.0,"done":null,"id":9,"name":"REQ-1-syscalls","partof":["REQ-1"],"parts":["SPC-drivers","SPC-syscalls"],"path":"design/purpose.toml","tested":0.0,"text":"## Syscalls \\n\\nSyscalls are a concept from unix and are a method for arbitrary executables to\\nrequest resources from the system. They are the mechanism by which programs\\nenter the kernel to perform tasks such as allocating memory, creating a \\nprocess, or creating a scheme/file handler.\\n\\nRedox shall support a syscall interface for userspace programs to perform these\\nnecessary tasks. The syscall interface should be unix-like without necessarily\\nadhering to all unix standards.. We shall support at least the 31 most common\\nsystem calls includeing open, pipe, pipe2, lseek, read, write, brk, execv, and\\nso on.\\n\\nCompared to Linux, redox\'s syscall interface should much more minimal. This is\\nnot because of the stage in development, but because of a minimalist design.\\n\\nIn addition, redox shall allow userspace programs to handle most device drivers\\nthrough the syscall interface, defined at [[REQ-1-syscalls]]\\n\\n"},{"code":null,"completed":0.0,"done":null,"id":10,"name":"SPC-schemes","partof":["REQ-1-schemes","SPC"],"parts":[],"path":"design/schemes.toml","tested":0.0,"text":"Schemes shall be the natural counter-part to URLs (see: SPC-url). URLs are\\nopened to schemes, which can then be opened to yield a resource.\\n\\nSchemes should be named such that the kernel is able to uniquely identify them.\\nThis name shall be used in the scheme part of the URL.\\n\\nSchemes will be a generalization of file systems. It should be noted that schemes\\ndo not necessarily represent normal files; they are often a \\"virtual file\\"\\n(i.e., an abstract unit with certain operations defined on it).\\n\\nThroughout the whole ecosystem of Redox schemes should be used as the main\\ncommunication primitive because they are a powerful abstraction. With schemes\\nRedox can have one unified I/O interface.\\n\\nSchemes can be defined both in user space and in kernel space but when possible\\nuser space is preferred. \\n"},{"code":null,"completed":0.0,"done":null,"id":11,"name":"SPC-drivers","partof":["REQ-1-syscalls","SPC"],"parts":["SPC-drivers-irq","SPC-drivers-mem"],"path":"design/drivers.toml","tested":0.0,"text":"This specification defines the API for how hardware driver\'s can be implemented\\nin user space by using only syscalls (drivers do not need to be implemented\\nin kernel space).\\n\\nThe typical process for implementing a device driver is:\\n- [[SPC-drivers-mem]]: Reserve the physical memory of the hardware device with\\n  the `physalloc` syscall.\\n- [[SPC-drivers-irq]]: Open the interrupt handler via the irq scheme with by\\n   calling the syscal `open(\\"irq:#\\")` where `#` is the interrupt to be\\n   queried/handled.\\n"},{"code":null,"completed":0.0,"done":null,"id":12,"name":"SPC","partof":[],"parts":["SPC-drivers","SPC-kernel","SPC-schemes","SPC-syscalls","SPC-url"],"path":"PARENT","tested":0.0,"text":"AUTO"},{"code":null,"completed":0.0,"done":null,"id":13,"name":"REQ","partof":[],"parts":["REQ-0","REQ-1"],"path":"PARENT","tested":0.0,"text":"AUTO"},{"code":null,"completed":0.0,"done":null,"id":14,"name":"SPC-kernel-schemes","partof":["SPC-KERNEL"],"parts":[],"path":"design/kernel/schemes.toml","tested":0.0,"text":"The kernel provides a small number of schemes in order to support userspace.\\n\\nName \\t| Description\\n------- | ----------------------------------------------------------------------\\n: \\t    | Root scheme - allows the creation of userspace schemes \\t\\ndebug: \\t| Provides access to serial console\\nevent: \\t| Allows reading of `Event`s which are registered using fevent\\nenv: \\t| Access and modify environmental variables\\ninitfs:\\t| Readonly filesystem used for initializing the system\\nirq: \\t| Allows userspace handling of IRQs\\nnull: \\t| Scheme that will discard all writes, and read no bytes\\npipe: \\t| Used internally by the kernel to implement pipe\\nsys: \\t| System information, such as the context list and scheme list\\nzero: \\t| Scheme that will discard all writes, and always fill read buffers with zero\\n"},{"code":null,"completed":0.0,"done":null,"id":15,"name":"REQ-1-kernel","partof":["REQ-1"],"parts":["SPC-kernel"],"path":"design/purpose.toml","tested":0.0,"text":"## The Kernel\\nRedox\'s kernel shall be a microkernel. The architecture is largely inspired by MINIX.\\n\\nHaving vastly smaller amounts of code in the kernel will make it easier to find and\\nfix bugs/security issues more efficiently. The main idea is to have components \\nand drivers that would be inside a monolithic kernel exist in user space and \\nfollow the Principle of Least Authority (POLA). This is where every individual \\ncomponent should be:\\n- Completely isolated in memory and as separate user processes \\n\\t- The failure of one component does not crash other components \\n\\t- Allows foreign and untrusted code to not expose the entire system \\n\\t- Bugs and malware cannot spread to other components \\n- Has restricted communication with other components \\n- Doesn\'t have Admin/Super-User privileges Bugs are moved to user space which \\n\\treduces their power\\n\\nAll of this should increase the reliability of the system significantly and make\\nredox useful. This for mission-critical applications and for users that want\\nminimal issues with their computer systems. \\n"},{"code":null,"completed":0.0,"done":null,"id":16,"name":"SPC-kernel","partof":["REQ-1-kernel","SPC"],"parts":["SPC-kernel-schemes"],"path":"design/kernel/spc.toml","tested":0.0,"text":"Redox\'s kernel shall be a microkernel. Microkernels stand out in their design\\nby providing minimal abstractions in kernel-space. Microkernels have an\\nemphasis on user space, unlike Monolithic kernels which have an emphasis on\\nkernel space.\\n\\nThe basic philosophy of microkernels is that any component which can run in\\nuser space should run in user space. Kernel-space should only be utilized for\\nthe most essential components (e.g., system calls, process separation, resource\\nmanagement, IPC, thread management, etc).\\n\\nThe kernel\'s main task should be to act as a medium for communication and\\nsegregation of processes. The kernel should provide minimal abstraction over\\nthe hardware (that is, drivers which can and should run in user mode).\\n\\n![micro vs macro kernels][1]\\n\\n[1]: https://upload.wikimedia.org/wikipedia/commons/6/67/OS-structure.svg\\n\\nThe design of the kernel follows a few basic principles:\\n- use the rust type system to create state abstractions (not custom state\\n  machines)\\n- avoid `unsafe` blocks, and when used should use `assert!` for any\\n  assumptions in unsafe blocks. Prefer kernel panics over security\\n  vulnerabilities. \\n- in general, use lots of `debug_assert!` statements for any assumptions\\n  that are being made.\\n"}]'),
 			route: route,
+			location: location,
 			errors: _user$project$Models$initialErrors,
 			settings: _user$project$Models$initialSettings,
 			addr: addr,
@@ -12584,8 +12707,9 @@ var _user$project$Main$initialModel = F2(
 		};
 	});
 var _user$project$Main$init = function (location) {
-	var model = A2(
+	var model = A3(
 		_user$project$Main$initialModel,
+		location,
 		'fake-addr',
 		_user$project$Routing$router(location));
 	return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
