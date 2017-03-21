@@ -53,3 +53,33 @@ We will use the basic implementation of the ethernet (e100d) driver as an
 example of how a driver might be implemented: **TODO** this would help improve
 understanding significantly.
 '''
+
+[TST-drivers]
+text = '''
+A hardware can be thought of as "just" an object which:
+- writes and reads to/from physical memory
+- generates interrupts
+
+The redox kernel therefore allows userspace programs to completely mock any
+hardware devices by using the following method:
+- [[SPC-drivers-mem]]: reserving physical memory using syscalls. Note that
+  physical memory reserved this way *can overlap with other processes*.
+- trigger interrupts with `int 0x20 to 0x2F` in assembler
+
+With these two features it is possible to mock device drivers in userspace. 
+Therefore drivers developed for redox should ship with a suite of tests that do
+something like the following:
+- Create a "mock" device by reserving physical memory and pretending to be the
+  actual device's registers, etc.
+- Initialize an ACTUAL driver that interfaces with the mock's address range
+  (but probably uses a scheme with `test` inserted in front of it so that it can
+  exist side-by-side with the real driver+scheme)
+- Send mock data over the mock device by writing to the fake registers and
+  enabling any necessary interrupts
+- Use the actual driver to handle the interrupts/etc and make assertions about
+  how it handles them.
+
+These tests will should be run as system tests as well as be available for
+users to run on their personal systems to valdate that all their drivers fit
+together as they expect.
+'''
