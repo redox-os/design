@@ -2,7 +2,7 @@
 partof = "REQ-1-syscalls"
 text = '''
 ## Redox Rust syscall API
-There shall e a rust [syscalls][1] crate for most developers to interface with
+There shall be a [redox_syscall][1] crate for most developers to interface with
 redox's syscalls. The crate documents the following items which comprise the
 entire redox syscall API:
 - The specific system calls that are supported, located in the `call` module
@@ -18,16 +18,20 @@ all unix syscalls are supported). The basic way in which a syscall is performed
 by redox's syscall crate (or another langauge's library) shall be:
 - TODO: VERIFY all of this
 - user program writes data to a ?designated location in it's own memory?
-- user program runs interrupt 0x80 (for x86 processesors)
+- user program triggers an interrupt (`int 0x80` for x86 processesors)
 - interrupt transfers control to kernel which executes the requested
-  syscall and ?writes the result pointer to a designated location in the
-  program's memory?. If there was an error ?what happens?
+  syscall.
+  - if successful, ?writes the result pointer to a designated location in the
+    program's memory?. 
+  - if there is an error, ?what happens?
 - the kernel executes `iret` (interrupt return) to let the process continue
   running. The process will typically read the values in it's ?syscall
   registers? and handle errors in a language-specific manner.
 
 Since redox's syscall implementation is unix compatible, documentation on linux
 system calls can be a useful reference for redox's implementation.
+
+[1]: https://github.com/redox-os/syscall
 '''
 
 [SPC-syscalls-arch]
@@ -41,13 +45,14 @@ system and can be extended to other architectures
 
 [SPC-syscalls-kernel]
 text = '''
-The redox kernel's syscall handler with type 
+The redox kernel's syscall shall have the following type:
 ```
 kernel/arch/x86_64/
 fn syscall(a: usize, b: usize, c: usize, d: usize, e: usize, f: usize, 
            stack: usize) -> usize {
 ```
-shall:
+
+It's rough implementation shall be:
 - match `a` on `SYS_CLASS`. File and path system calls have to be handled
   specially
 - If `a` is a file syscall, get a FileHandle from `b` and match on `SYS_ARG` to
