@@ -2,7 +2,7 @@
 [SPC-drivers]
 partof = "REQ-1-syscalls"
 text = '''
-This specification defines the API for how hardware driver's can be implemented
+This specification defines the ABI for how hardware driver's can be implemented
 in user space by using only syscalls (drivers do not need to be implemented
 in kernel space).
 
@@ -121,4 +121,8 @@ Some notes:
 **VERIFY**: There is the possibility of the kernel automatically masking the
 IRQ and marking it as handled if none of the drivers handle it within a certain
 span of time. This could help with reliability with rogue device drivers.
+
+## Testing Drivers
+In addition to 
+
 '''

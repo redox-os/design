@@ -79,36 +79,34 @@ text = '''
 Syscalls are a concept from unix and are a method for arbitrary executables to
 request resources from the system. They are the mechanism by which programs
 enter the kernel to perform tasks such as allocating memory, creating a 
-process, or creating a scheme/file handler.
+process, or creating a scheme.
 
 Redox shall support a syscall interface for userspace programs to perform these
 necessary tasks. The syscall interface should be unix-like without necessarily
-adhering to all unix standards.. We shall support at least the 31 most common
+adhering to all unix standards. We shall support at least the 31 most common
 system calls includeing open, pipe, pipe2, lseek, read, write, brk, execv, and
 so on.
 
-Compared to Linux, redox's syscall interface should much more minimal. This is
-not because of the stage in development, but because of a minimalist design.
+Compared to Linux, redox's syscall interface will be much more minimal. This
+is not because of the stage in development, but because of a minimalist design.
 
 In addition, redox shall allow userspace programs to handle most device drivers
-through the syscall interface, defined at [[REQ-1-syscalls]]
-
+through the syscall interface.
 '''
 
 [REQ-1-schemes]
 text = '''
 Schemes are the main communication primitive of redox, providing a unified
 I/O interface to a file-like addressing method called "URLs", which are
-just strings of the form "scheme:path/to/object". Each scheme must have a
+just strings of the form "scheme:path/to/reference". Each scheme must have a
 unique name. Most schemes will be defined in user space, with a few necessary
-ones defined in user space.
+ones defined in the kernel.
 
 Each scheme shall be managed by a single manager which defines it's own
 domain (read/write/seek/etc). Schemes are simply a generalization of a
 file system which creates segregated virtual file systems for each
 scheme that can be arbitrarily structured (they do not have to be tree-like)
-and arbitrarily defined by a program.
-
+and arbitrarily defined by a program. 
 '''
 
 [REQ-1-kernel]
@@ -118,18 +116,18 @@ Redox's kernel shall be a microkernel. The architecture is largely inspired by M
 
 Having vastly smaller amounts of code in the kernel will make it easier to find and
 fix bugs/security issues more efficiently. The main idea is to have components 
-and drivers that would be inside a monolithic kernel exist in user space and 
-follow the Principle of Least Authority (POLA). This is where every individual 
-component should be:
+and drivers that would normally have been in kernel space (for a monolithic
+kernel) exist in user space instead and follow the Principle of Least Authority
+(POLA). This is where every individual component should be:
 - Completely isolated in memory and as separate user processes 
 	- The failure of one component does not crash other components 
 	- Allows foreign and untrusted code to not expose the entire system 
 	- Bugs and malware cannot spread to other components 
 - Has restricted communication with other components 
-- Doesn't have Admin/Super-User privileges Bugs are moved to user space which 
-	reduces their power
+- Doesn't have super-user/kernel privileges so that bugs are moved to user
+  space which reduces their power
 
 All of this should increase the reliability of the system significantly and make
-redox useful. This for mission-critical applications and for users that want
-minimal issues with their computer systems. 
+redox useful for mission-critical applications and users that want minimal
+issues with their computer systems. 
 '''

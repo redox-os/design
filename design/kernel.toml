@@ -27,6 +27,19 @@ The design of the kernel follows a few basic principles:
   vulnerabilities. 
 - in general, use lots of `debug_assert!` statements for any assumptions
   that are being made.
+
+## Kernel Userspace API
+The kernel's primary role is to act as a bridge between the hardware and
+the software. Unlike linux, that bridge is much smaller.
+
+The userspace has only two ways of interacting directly with the kernel:
+- system calls, defined in [[SPC-sysalls]]
+- schemes, defined in [[SPC-schemes]]
+
+Using these two API's, userspace programs can reserve memory, open files,
+interact and create drivers for any kind of hardware, create virtual
+file systems and much more. (VERIFY: are these really the ONLY two apis?)
+
 '''
 
 

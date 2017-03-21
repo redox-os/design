@@ -2,7 +2,7 @@
 partof = "REQ-1-schemes"
 text = '''
 Schemes are the primary communication mechanism between system programs
-in redox. It facilitates communication between:
+in redox. They facilitates communication between:
 - the kernel and drivers, such as the `irq` scheme
 - drivers and low level interfaces, such as `ethernetd` using the `network`
   scheme (which is created directly from the driver)
@@ -12,6 +12,44 @@ in redox. It facilitates communication between:
 - VERIFY: userspace programs and system level interfaces, such as the orbital
   window manager's scheme.
 
+Most schemes should be in user space, however a few must be implemented
+in kernel space and are used both internally in the kernel and as part
+of the kernel ABI.
+
+### Kernel Space Schemes
+```
+Name 	| Description
+------- | ----------------------------------------------------------------------
+: 	    | Root scheme - allows the creation of userspace schemes 	
+debug: 	| Provides access to serial console
+event: 	| Allows reading of `Event`s which are registered using fevent
+env: 	| Access and modify environmental variables
+initfs:	| Readonly filesystem used for initializing the system
+irq: 	| Allows userspace handling of IRQs
+null: 	| Scheme that will discard all writes, and read no bytes
+pipe: 	| Used internally by the kernel to implement pipe
+sys: 	| System information, such as the context list and scheme list
+zero: 	| Scheme that will discard all writes, and always fill read buffers with zero
+```
+
+### Example Userspace Schemes:
+```
+Name 	  | Description
+--------  | ----------------------------------------------------------------------
+redoxfs:  | Provides the standard userspace file system
+orbital:  | the Desktop is rendered using only a scheme
+ethernet: | Scheme from Userspace driver for raw access to the ethernet device
+ip:       | IP addressing and communication scheme, builds on `ethernet:`
+udp:      | UDP protocol scheme, builds on `ip:`
+tcp:      | TCP protocol scheme, builds on `ip:`
+```
+
+[1]: https://github.com/redox-os/syscall
+'''
+
+[SPC-schemes-api]
+text = '''
+## How a Developer Creates a Scheme
 In order to add a scheme to redox, a developer can either:
 1. open the scheme from the root scheme and then treat it as a 
   `std::fs::File` (**VERIFY** `File` implements `Scheme`)
@@ -23,7 +61,7 @@ let fd = syscall::open(
 let socket = unsafe { File::from_raw_fd(socket_fd) };
 ```
 2. implement the `redox_syscall::Scheme` trait from [redox_syscall][1]
-   on a custom struct. 
+   on a custom struct and use a socket_fd for scheduling.
 
 Option #2 has the benefit that it gives you complete control over how
 the scheme handles every request. It can operate like a file, socket or
@@ -33,48 +71,14 @@ etc. It does not have to follow "normal" file system rules.
 For instance, the window manager orbital uses a scheme in order to render the
 GUI. TODO: explain at a high level how orbital works and why you couldn't do
 the same thing using unix files/sockets.
-
-[1]: https://github.com/redox-os/syscall
-'''
-
-[SPC-schemes-kernel]
-text = '''
-Most schemes should be in user space, however a few are impelmented in kernel
-space. (TODO: there is going to be a manpage for these):
-- env: TODO no idea, something to query paths?
-- event: TODO probably handline events of some kind. How? What do the paths
-  represent. No `write` method provided so only for reading events. Looks
-  like it might be for reading kernel events?
-- initfs: VERIFY the initial ramfs for the init system to use
-- `irq:#`: open a socket to handle the #'th IRQ, more information in
-  [[SPC-drivers-irq]]
-- live: TODO: no idea, something with disks
-- memory: returns fstatvfs, which is information on the available memory
-  in the system.
-- null: same as /dev/null in unix, works as a sink for any data
-- pipe: open a unix style pipe with input+output. TODO: API is not apparent
-- root: VERIFY the root scheme `:` also called the registrar. This is interface
-  for registering new schemes and **VERIFY: also hosts the file system**
-- sys: scheme for getting information on the system such as cpu, memory, exe 
-  and context (TODO: what are those last ones?)
-- user: VERIFY: create, modify and list users
-- zero: same as /dev/zero in unix, works as a source for a u8 stream of zeroes
-
-Example Userspace Schemes:
-- redoxfs: the scheme that supports the redox filesystem
-- orbital: the Desktop is rendered using only a scheme
-- ethernet -> ipd -> udp + tcp: these schemes build on eachother and
-  are ALL in userspace. In fact, the entire networking stack (including the
-  driver) is located in userspace.
-- TODO: more examples here would be good
 '''
 
 [SPC-schemes-url]
 text = ''' 
 Url's shall be the data structure which can be opened to schemes in the kernel.
-From the user perspective they are a C-like null-terminating string of the form
-`"scheme:path/to/reference"`. Under the hood they are represented as one of the
-following:
+From the user perspective a url is just a C-like null-terminating string of the
+form `"scheme:path/to/reference"`. Under the hood (in the kernel) they are
+represented as one of the following:
 - `Url<'a>`: The simplest one, just a struct containing two fat pointers,
   representing the scheme and the reference respectively. Similar to
   `std::Path::Path`
@@ -83,7 +87,4 @@ following:
   respectively. Similar to `std::path::PathBuf`.
 - `CowUrl<'a>`: This is a Copy-on-Write (CoW) URL, which, when mutated, gets
   cloned to heap in order to have efficient conditional allocation of the URL.
-
-These will give the greatest flexibility and performance when dealing with Url's
-in kernel space.
 '''
