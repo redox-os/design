@@ -1,20 +1,62 @@
 [SPC-syscalls]
 partof = "REQ-1-syscalls"
 text = '''
-## Redox syscall Specificaiton
-
-TODO: these docs are hard to write because the syscall crate has almost no
-documentation. What is the `Dma` type? What do the error values mean? What
-do the data structures represent? Once that documentation is flushed out
-it will be easier to fit them into the "grand scheme of things"
-
-### API Documentation
-The API for redox's system calls will be through the [redox_syscall][1] crate,
-documented [here][2]. The library documentation the following items that will
-not be repeated in the design documents:
+## Redox Rust syscall API
+There shall e a rust [syscalls][1] crate for most developers to interface with
+redox's syscalls. The crate documents the following items which comprise the
+entire redox syscall API:
 - The specific system calls that are supported, located in the `call` module
-- The full list of errors that can be generated, located in the `error` module
+- data types associated with system calls, located in the `data` and `io`
+  modules
+- traits used for schemes, located in the `scheme` module
+- The raw numbers used when directly interfacing the syscalls, located in the
+  `number`, `error`, and `flag` modules
+
+## Redox syscall ABI Specification
+Redox's syscall ABI implementation shall be compatible with unix (although not
+all unix syscalls are supported). The basic way in which a syscall is performed
+by redox's syscall crate (or another langauge's library) shall be:
+- TODO: VERIFY all of this
+- user program writes data to a ?designated location in it's own memory?
+- user program runs interrupt 0x80 (for x86 processesors)
+- interrupt transfers control to kernel which executes the requested
+  syscall and ?writes the result pointer to a designated location in the
+  program's memory?. If there was an error ?what happens?
+- the kernel executes `iret` (interrupt return) to let the process continue
+  running. The process will typically read the values in it's ?syscall
+  registers? and handle errors in a language-specific manner.
+
+Since redox's syscall implementation is unix compatible, documentation on linux
+system calls can be a useful reference for redox's implementation.
+'''
+
+[SPC-syscalls-arch]
+text = '''
+## Redox's hardware specific syscall implementation
+
+TODO: kernel/arch/x86_64/ has a special syscall implementation which uses
+assembly directly. Comment on how this implementation exists within the build
+system and can be extended to other architectures
+'''
+
+[SPC-syscalls-kernel]
+text = '''
+The redox kernel's syscall handler with type 
+```
+kernel/arch/x86_64/
+fn syscall(a: usize, b: usize, c: usize, d: usize, e: usize, f: usize, 
+           stack: usize) -> usize {
+```
+shall:
+- match `a` on `SYS_CLASS`. File and path system calls have to be handled
+  specially
+- If `a` is a file syscall, get a FileHandle from `b` and match on `SYS_ARG` to
+  determine what kind of file operation to perform (dup, close, fevent, etc).
+- if `a` is a path syscall, match on `a` to determine whether to do open,
+  chmod, rmdir or unlink.
+- otherwise, match directly on `a` and pass in the values to the correct
+  syscall implementation. Each syscall implementation shall be a function which
+  receives raw (or almost raw) arguments and returns a `Result<u32>`.
 
 [1]: https://github.com/redox-os/syscall
-[2]: https://docs.rs/redox_syscall
 '''
