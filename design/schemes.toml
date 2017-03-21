@@ -13,24 +13,9 @@ in redox. They facilitates communication between:
   window manager's scheme.
 
 Most schemes should be in user space, however a few must be implemented
-in kernel space and are used both internally in the kernel and as part
-of the kernel ABI.
+in kernel space ([[SPC-schemes-kernel]]) and are used both internally in the
+kernel and as part of the kernel ABI.
 
-### Kernel Space Schemes
-```
-Name 	| Description
-------- | ----------------------------------------------------------------------
-: 	    | Root scheme - allows the creation of userspace schemes 	
-debug: 	| Provides access to serial console
-event: 	| Allows reading of `Event`s which are registered using fevent
-env: 	| Access and modify environmental variables
-initfs:	| Readonly filesystem used for initializing the system
-irq: 	| Allows userspace handling of IRQs
-null: 	| Scheme that will discard all writes, and read no bytes
-pipe: 	| Used internally by the kernel to implement pipe
-sys: 	| System information, such as the context list and scheme list
-zero: 	| Scheme that will discard all writes, and always fill read buffers with zero
-```
 
 ### Example Userspace Schemes:
 ```
@@ -49,7 +34,8 @@ tcp:      | TCP protocol scheme, builds on `ip:`
 
 [SPC-schemes-api]
 text = '''
-## How a Developer Creates a Scheme
+The API provided to the developer shall follow the below guide.
+
 In order to add a scheme to redox, a developer can either:
 1. open the scheme from the root scheme and then treat it as a 
   `std::fs::File` (**VERIFY** `File` implements `Scheme`)
@@ -61,7 +47,7 @@ let fd = syscall::open(
 let socket = unsafe { File::from_raw_fd(socket_fd) };
 ```
 2. implement the `redox_syscall::Scheme` trait from [redox_syscall][1]
-   on a custom struct and use a socket_fd for scheduling.
+   on a custom struct and use a `socket_fd` for scheduling.
 
 Option #2 has the benefit that it gives you complete control over how
 the scheme handles every request. It can operate like a file, socket or
@@ -71,9 +57,33 @@ etc. It does not have to follow "normal" file system rules.
 For instance, the window manager orbital uses a scheme in order to render the
 GUI. TODO: explain at a high level how orbital works and why you couldn't do
 the same thing using unix files/sockets.
+
+The full documentation for schemes can be found in the the
+[`redox_syscall::scheme` crate][1]
+
+[1]: https://github.com/redox-os/syscall
 '''
 
-[SPC-schemes-url]
+[SPC-schemes-kernel]
+text = '''
+### Kernel Space Schemes
+```
+Name 	| Description
+------- | ----------------------------------------------------------------------
+: 	    | Root scheme - allows the creation of userspace schemes 	
+debug: 	| Provides access to serial console
+event: 	| Allows reading of `Event`s which are registered using fevent
+env: 	| Access and modify environmental variables
+initfs:	| Readonly filesystem used for initializing the system
+irq: 	| Allows userspace handling of IRQs
+null: 	| Scheme that will discard all writes, and read no bytes
+pipe: 	| Used internally by the kernel to implement pipe
+sys: 	| System information, such as the context list and scheme list
+zero: 	| Scheme that will discard all writes, and always fill read buffers with zero
+```
+'''
+
+[SPC-schemes-kernel-url]
 text = ''' 
 Url's shall be the data structure which can be opened to schemes in the kernel.
 From the user perspective a url is just a C-like null-terminating string of the
@@ -88,3 +98,7 @@ represented as one of the following:
 - `CowUrl<'a>`: This is a Copy-on-Write (CoW) URL, which, when mutated, gets
   cloned to heap in order to have efficient conditional allocation of the URL.
 '''
+
+# TODO: break down each kernel scheme that has a complex design into it's own
+# specification (ex: SPC-schemes-kernel-irq)
+# Ones that need to be broken down: event, env, irq, sys
