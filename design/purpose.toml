@@ -89,9 +89,6 @@ so on.
 
 Compared to Linux, redox's syscall interface will be much more minimal. This
 is not because of the stage in development, but because of a minimalist design.
-
-In addition, redox shall allow userspace programs to handle most device drivers
-through the syscall interface.
 '''
 
 [REQ-1-schemes]
@@ -130,4 +127,13 @@ kernel) exist in user space instead and follow the Principle of Least Authority
 All of this should increase the reliability of the system significantly and make
 redox useful for mission-critical applications and users that want minimal
 issues with their computer systems. 
+'''
+
+[REQ-1-drivers]
+text = '''
+Redox shall provide an ABI and library API that allows for the implementation
+of arbitrary hardware drivers in userspace. This is one of the core
+requirements around making redox a microkernel as required in [[REQ-1-kernel]].
+
+
 '''
